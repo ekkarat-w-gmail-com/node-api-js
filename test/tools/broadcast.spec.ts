@@ -1,12 +1,28 @@
 import create from '../../src';
+import broadcast from '../../src/tools/transactions/broadcast';
 import { CHAIN_ID, MASTER_ACCOUNT, NODE_URL, STATE } from '../_state';
 import { libs, transfer } from '@waves/waves-transactions';
-import { ITransferTransactionWithProofs, IWithId } from '@waves/ts-types';
+import {
+    IIssueTransactionV2, IIssueTransactionV3,
+    ITransferTransactionV1,
+    ITransferTransactionWithProofs,
+    IWithId,
+    TSignedTransaction
+} from '@waves/ts-types';
 import { TLong } from '../../src/interface';
 import { wait } from '../../src/tools/utils';
 import { TRANSACTION_STATUSES } from '../../src/constants';
 
 const api = create(NODE_URL);
+
+declare const a: TSignedTransaction<ITransferTransactionV1<TLong>>;
+declare const b: TSignedTransaction<IIssueTransactionV3<TLong>>;
+
+
+const list: [typeof a, typeof b] = [a, b];
+broadcast('', list)
+    .then(([t, i]) => {
+    });
 
 it('Broadcast 2 transactions', async () => {
     const tx1 = transfer({
@@ -40,7 +56,7 @@ test('Chain broadcast 2 transactions', async () => {
         amount: 2
     }, MASTER_ACCOUNT.SEED) as ITransferTransactionWithProofs<TLong> & IWithId;
 
-    const promise = api.tools.transactions.broadcast([tx1, tx2], { chain: true, confirmations: 1 }).catch(() => null);
+    const promise = api.tools.transactions.broadcast([tx1, tx2], {chain: true, confirmations: 1}).catch(() => null);
 
     await wait(10);
     const status = await api.transactions.fetchStatus([tx1.id, tx2.id]);

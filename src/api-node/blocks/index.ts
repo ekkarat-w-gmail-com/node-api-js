@@ -1,6 +1,6 @@
 import { IRequestOptions, TLong } from '../../interface';
 import request from '../../tools/request';
-import { TTransactionFromAPI } from '@waves/ts-types';
+import { IWithApiMixin, TTransaction } from '@waves/ts-types';
 
 
 /**
@@ -181,5 +181,5 @@ export interface IBlockHeader {
 
 export interface IBlock extends IBlockHeader {
     fee: TLong;
-    transactions: Array<TTransactionFromAPI<TLong>>;
+    transactions: Array<TTransaction<TLong> & IWithApiMixin>;
 }

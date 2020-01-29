@@ -1,4 +1,4 @@
-import { TTransactionFromAPI, TTransactionFromAPIMap, TTransactionWithProofs } from '@waves/ts-types';
+import { IWithApiMixin, TSignedTransaction, TTransaction, } from '@waves/ts-types';
 import { TLong } from '../../interface';
 import { broadcast } from '../../api-node/transactions';
 import { head, toArray } from '../utils';
@@ -16,30 +16,38 @@ export type TMap<MAP extends Record<string | number, any>, Key extends keyof MAP
 export type TMapTuple<T extends Array<Record<string | number, any>>, TO_MAP extends Record<string | number, Record<string | number, any>>, KEY> = {
     [K in keyof T]: T[K] extends never ? never : KEY extends keyof T[K] ? T[K][KEY] extends infer R ? R extends keyof TO_MAP ? TO_MAP[R] : never : never : never;
 }
+type TWithApiMixinList<T extends Array<TTransaction<TLong>>> = { [Key in keyof T]: T[Key] extends TTransaction<TLong> ? TSignedTransaction<T[Key]> & IWithApiMixin : never }
+
+type TSigned<LONG, T extends Array<TTransaction<LONG>>> = { [Key in keyof T]: T[Key] extends TTransaction<LONG> ? TSignedTransaction<T[Key]> : never }
 
 
-export default function <T extends Array<TTransactionWithProofs<TLong>>>(base: string, list: T): Promise<TMapTuple<T, TTransactionFromAPIMap<TLong>, 'type'>>;
-export default function <T extends TTransactionWithProofs<TLong>>(base: string, tx: T, options?: Partial<IOptions>): Promise<TMap<TTransactionFromAPIMap<TLong>, T['type']>>;
-export default function (base: string, list: TTransactionWithProofs<TLong> | Array<TTransactionWithProofs<TLong>>, options?: Partial<IOptions>): Promise<TTransactionFromAPI<TLong> | Array<TTransactionFromAPI<TLong>>> {
-    const opt = { ...DEFAULT_BROADCAST_OPTIONS, ...(options || {}) };
+export default function <T extends Array<TTransaction<TLong>>>(base: string, list: TSigned<TLong, T>): Promise<TWithApiMixinList<T>>;
+export default function <T extends TTransaction<TLong>>(base: string, tx: TSignedTransaction<T>, options?: Partial<IOptions>): Promise<T & IWithApiMixin>;
+export default function (
+    base: string,
+    list: TSignedTransaction<TTransaction<TLong>> | Array<TSignedTransaction<TTransaction<TLong>>>,
+    options?: Partial<IOptions>
+): Promise<TTransaction<TLong> & IWithApiMixin | Array<TTransaction<TLong> & IWithApiMixin>> {
+    const opt = {...DEFAULT_BROADCAST_OPTIONS, ...(options || {})};
     const isOnce = !Array.isArray(list);
     const confirmations = opt.confirmations > 0 ? 1 : 0;
 
     return (opt.chain
-        ? chainBroadcast(base, toArray(list), { ...opt, confirmations })
+        ? chainBroadcast(base, toArray(list), {...opt, confirmations})
         : simpleBroadcast(base, toArray(list)))
         .then(list => opt.confirmations <= 0 ? list : wait(base, list, opt))
-        .then(list => isOnce ? head(list) as TTransactionFromAPI<TLong> : list);
+        .then(list => isOnce ? head(list) as TTransaction<TLong> & IWithApiMixin : list);
 }
 
-function simpleBroadcast(base: string, list: Array<TTransactionWithProofs<TLong>>): Promise<Array<TTransactionFromAPI<TLong>>> {
-    return Promise.all(list.map(tx => broadcast(base, tx)));
+
+function simpleBroadcast<T extends Array<TSignedTransaction<TTransaction<TLong>>>>(base: string, list: T): Promise<TWithApiMixinList<T>> {
+    return Promise.all(list.map(tx => broadcast(base, tx))) as Promise<TWithApiMixinList<T>>;
 }
 
-function chainBroadcast(base: string, list: Array<TTransactionWithProofs<TLong>>, options: IOptions): Promise<Array<TTransactionFromAPI<TLong>>> {
-    return new Promise<Array<TTransactionFromAPI<TLong>>>((resolve, reject) => {
+function chainBroadcast<T extends Array<TSignedTransaction<TTransaction<TLong>>>>(base: string, list: T, options: IOptions): Promise<TWithApiMixinList<T>> {
+    return new Promise<TWithApiMixinList<T>>((resolve, reject) => {
         const toBroadcast = list.slice().reverse();
-        const result: Array<TTransactionFromAPI<TLong>> = [];
+        const result: TWithApiMixinList<T> = [] as unknown as TWithApiMixinList<T>;
 
         const loop = () => {
             if (!toBroadcast.length) {
@@ -47,7 +55,7 @@ function chainBroadcast(base: string, list: Array<TTransactionWithProofs<TLong>>
                 return null;
             }
 
-            const tx = toBroadcast.pop() as TTransactionWithProofs<TLong>;
+            const tx = toBroadcast.pop() as TSignedTransaction<TTransaction<TLong>>;
             broadcast(base, tx)
                 .then(tx => wait(base, tx, options))
                 .then(tx => {
@@ -66,3 +74,4 @@ export interface IOptions {
     maxWaitTime: number;
     requestInterval: number;
 }
+

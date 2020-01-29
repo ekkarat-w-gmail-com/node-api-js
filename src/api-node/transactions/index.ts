@@ -1,7 +1,7 @@
 import {
+    IWithApiMixin,
     IWithProofs,
     TTransaction,
-    TTransactionFromAPI,
     TTransactionMap
 } from '@waves/ts-types';
 import { TRANSACTION_STATUSES, TTransactionStatuses } from '../../constants';
@@ -61,7 +61,7 @@ export type TFeeInfo<LONG = TLong> = {
  * GET /transactions/unconfirmed
  * Unconfirmed transactions
  */
-export function fetchUnconfirmed(base: string): Promise<Array<TTransactionFromAPI<TLong>>> {
+export function fetchUnconfirmed(base: string): Promise<Array<TTransaction<TLong> & IWithApiMixin>> {
     return request({
         base,
         url: '/transactions/unconfirmed'
@@ -75,8 +75,8 @@ export function fetchUnconfirmed(base: string): Promise<Array<TTransactionFromAP
  * @param after      искать транзакции после ID указанного в after
  * @param retry      количество попыток на выполнение запроса
  */
-export function fetchTransactions(base: string, address: string, limit: number, after?: string, retry?: number): Promise<Array<TTransactionFromAPI<TLong>>> {
-    return request<Array<Array<TTransactionFromAPI<TLong>>>>({
+export function fetchTransactions(base: string, address: string, limit: number, after?: string, retry?: number): Promise<Array<TTransaction<TLong> & IWithApiMixin>> {
+    return request<Array<Array<TTransaction<TLong> & IWithApiMixin>>>({
         base,
         url: `/transactions/address/${address}/limit/${limit}${query({ after })}`
     }).then(([list]) => list);
@@ -86,7 +86,7 @@ export function fetchTransactions(base: string, address: string, limit: number, 
  * GET /transactions/unconfirmed/info/{id}
  * Unconfirmed transaction info
  */
-export function fetchUnconfirmedInfo(base: string, id: string): Promise<TTransactionFromAPI<TLong>> {
+export function fetchUnconfirmedInfo(base: string, id: string): Promise<TTransaction<TLong> & IWithApiMixin> {
     return request({
         base,
         url: `/transactions/unconfirmed/info/${id}`
@@ -104,7 +104,7 @@ export function fetchUnconfirmedInfo(base: string, id: string): Promise<TTransac
  * GET /transactions/info/{id}
  * Transaction info
  */
-export function fetchInfo(base: string, id: string): Promise<TTransactionFromAPI<TLong>> {
+export function fetchInfo(base: string, id: string): Promise<TTransaction<TLong> & IWithApiMixin> {
     return request({ base, url: `/transactions/info/${id}` });
 }
 
@@ -155,7 +155,7 @@ export interface ITransactionStatus {
     height: number;
 }
 
-export function broadcast(base: string, tx: TTransaction<TLong> & IWithProofs): Promise<TTransactionFromAPI<TLong>> {
+export function broadcast(base: string, tx: TTransaction<TLong> & IWithProofs): Promise<TTransaction<TLong> & IWithApiMixin> {
     return request({
         base, url: '/transactions/broadcast',
         options: {

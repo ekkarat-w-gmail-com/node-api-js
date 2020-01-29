@@ -1,7 +1,7 @@
 import { TLong, TRANSACTION_NAME_MAP } from '../../interface';
-import { TTransactionFromAPIMap } from '@waves/ts-types';
 import request from '../../tools/request';
 import { toArray } from '../../tools/utils';
+import { IWithApiMixin, TIssueTransaction } from '@waves/ts-types';
 
 /**
  * GET /assets/details/{assetId}
@@ -80,7 +80,7 @@ export type TAssetBalance = {
     'minSponsoredAssetFee': null | number;
     'sponsorBalance': null | number;
     'quantity': number;
-    'issueTransaction': TTransactionFromAPIMap<TLong>[TRANSACTION_NAME_MAP['issue']]
+    'issueTransaction': TIssueTransaction & IWithApiMixin
 }
 
 export type TAssetDetails<LONG = TLong> = {

@@ -1,5 +1,5 @@
 import { fetchTransactions } from '../../api-node/transactions';
-import { TTransactionFromAPI } from '@waves/ts-types';
+import { IWithApiMixin, TTransaction } from '@waves/ts-types';
 import { TLong } from '../../interface';
 import { indexBy, keys, prop } from '../utils';
 import { EventEmitter } from 'typed-ts-events';
@@ -15,7 +15,7 @@ export class Watch {
     private _timer: ReturnType<typeof setTimeout> | null = null;
 
 
-    constructor(base: string, address: string, tx: TTransactionFromAPI<TLong> | null, interval?: number) {
+    constructor(base: string, address: string, tx: TTransaction<TLong> & IWithApiMixin | null, interval?: number) {
         this.address = address;
         this._interval = interval || 1000;
         this._base = base;
@@ -96,10 +96,10 @@ export class Watch {
             .catch(onError);
     }
 
-    private getTransactionsInHeight(from: TTransactionFromAPI<TLong>, limit: number): Promise<Array<TTransactionFromAPI<TLong>>> {
+    private getTransactionsInHeight(from: TTransaction<TLong> & IWithApiMixin, limit: number): Promise<Array<TTransaction<TLong> & IWithApiMixin>> {
         const height = from.height as number;
 
-        const loop = (downloaded: Array<TTransactionFromAPI<TLong>>): Promise<Array<TTransactionFromAPI<TLong>>> => {
+        const loop = (downloaded: Array<TTransaction<TLong> & IWithApiMixin>): Promise<Array<TTransaction<TLong> & IWithApiMixin>> => {
 
             if (downloaded.length >= limit) {
                 return Promise.resolve(downloaded);
@@ -132,7 +132,7 @@ export class Watch {
         }, this._interval);
     }
 
-    private static _groupByHeight(list: Array<TTransactionFromAPI<TLong>>): Record<number, Array<TTransactionFromAPI<TLong>>> {
+    private static _groupByHeight(list: Array<TTransaction<TLong> & IWithApiMixin>): Record<number, Array<TTransaction<TLong> & IWithApiMixin>> {
         return list.reduce((hash, tx) => {
             if (!hash[tx.height as number]) {
                 hash[tx.height as number] = [tx];
@@ -143,7 +143,7 @@ export class Watch {
         }, Object.create(null));
     }
 
-    private static _getTransactionsToDispatch(list: Array<TTransactionFromAPI<TLong>>, dispatched: Record<string, TTransactionFromAPI<TLong>>, lastId: string): Array<TTransactionFromAPI<TLong>> {
+    private static _getTransactionsToDispatch(list: Array<TTransaction<TLong> & IWithApiMixin>, dispatched: Record<string, TTransaction<TLong> & IWithApiMixin>, lastId: string): Array<TTransaction<TLong> & IWithApiMixin> {
         const result = [];
         for (let i = 0; i < list.length; i++) {
             const tx = list[i];
@@ -162,11 +162,11 @@ export class Watch {
 interface ILastBlockInfo {
     height: number;
     lastId: string;
-    transactions: Array<TTransactionFromAPI<TLong>>;
+    transactions: Array<TTransaction<TLong> & IWithApiMixin>;
 }
 
 export interface IEvents {
-    'change-state': Array<TTransactionFromAPI<TLong>>;
+    'change-state': Array<TTransaction<TLong> & IWithApiMixin>;
 }
 
 export default function (base: string, address: string, interval?: number) {

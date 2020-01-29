@@ -1,7 +1,7 @@
 import request from '../../tools/request';
 import stringify from '../../tools/stringify';
-import { TTransactionFromAPI } from '@waves/ts-types';
 import { TLong } from '../../interface';
+import { IWithApiMixin, TTransaction } from '@waves/ts-types';
 
 /**
  * GET /utils/seed
@@ -72,7 +72,7 @@ export function fetchEstimate(base: string, body: string): Promise<IEstimate> {
  * POST /utils/transactionSerialize
  * Serialize transaction
  */
-export function fetchTransactionSerialize(base: string, body: TTransactionFromAPI<TLong>): Promise<ITransactionSerialize> {
+export function fetchTransactionSerialize(base: string, body: TTransaction<TLong> & IWithApiMixin): Promise<ITransactionSerialize> {
     return request({
         base,
         url: '/utils/transactionSerialize',

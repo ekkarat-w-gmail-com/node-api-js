@@ -25,7 +25,6 @@ import getNetworkByte from './tools/blocks/getNetworkByte';
 import getNetworkCode from './tools/blocks/getNetworkCode';
 import createWatch from './tools/adresses/watch';
 import * as toolsUtilsModule from './tools/utils';
-import { TTransactionFromAPIMap, TTransactionWithProofs } from '@waves/ts-types';
 import { TLong } from './interface';
 
 
