@@ -1,9 +1,4 @@
-import {
-    IWithApiMixin,
-    IWithProofs,
-    TTransaction,
-    TTransactionMap
-} from '@waves/ts-types';
+import { IWithApiMixin, TSignedTransaction, TTransaction, TTransactionMap } from '@waves/ts-types';
 import { TRANSACTION_STATUSES, TTransactionStatuses } from '../../constants';
 import { TLong } from '../../interface';
 import { fetchHeight } from '../blocks';
@@ -20,7 +15,7 @@ export function fetchUnconfirmedSize(base: string): Promise<IUnconfirmedSize> {
     return request({
         base,
         url: '/transactions/unconfirmed/size'
-    })
+    });
 }
 
 interface IUnconfirmedSize {
@@ -34,7 +29,7 @@ interface IUnconfirmedSize {
  * Sign a transaction with a non-default private key
  */
 
- /**
+/**
  * POST /transactions/calculateFee
  * Calculate transaction fee
  */
@@ -65,7 +60,7 @@ export function fetchUnconfirmed(base: string): Promise<Array<TTransaction<TLong
     return request({
         base,
         url: '/transactions/unconfirmed'
-    })
+    });
 }
 
 /**
@@ -78,7 +73,7 @@ export function fetchUnconfirmed(base: string): Promise<Array<TTransaction<TLong
 export function fetchTransactions(base: string, address: string, limit: number, after?: string, retry?: number): Promise<Array<TTransaction<TLong> & IWithApiMixin>> {
     return request<Array<Array<TTransaction<TLong> & IWithApiMixin>>>({
         base,
-        url: `/transactions/address/${address}/limit/${limit}${query({ after })}`
+        url: `/transactions/address/${address}/limit/${limit}${query({after})}`
     }).then(([list]) => list);
 }
 
@@ -105,7 +100,7 @@ export function fetchUnconfirmedInfo(base: string, id: string): Promise<TTransac
  * Transaction info
  */
 export function fetchInfo(base: string, id: string): Promise<TTransaction<TLong> & IWithApiMixin> {
-    return request({ base, url: `/transactions/info/${id}` });
+    return request({base, url: `/transactions/info/${id}`});
 }
 
 export function fetchStatus(base: string, list: Array<string>): Promise<ITransactionsStatus> {
@@ -119,7 +114,7 @@ export function fetchStatus(base: string, list: Array<string>): Promise<ITransac
 
     const loadAllTxInfo: Array<Promise<ITransactionStatus>> = list.map(id =>
         fetchUnconfirmedInfo(base, id)
-            .then(() => ({ ...DEFAULT_STATUS, id, status: TRANSACTION_STATUSES.UNCONFIRMED, inUTX: true }))
+            .then(() => ({...DEFAULT_STATUS, id, status: TRANSACTION_STATUSES.UNCONFIRMED, inUTX: true}))
             .catch(() => fetchInfo(base, id)
                 .then(tx => ({
                     ...DEFAULT_STATUS,
@@ -127,13 +122,13 @@ export function fetchStatus(base: string, list: Array<string>): Promise<ITransac
                     status: TRANSACTION_STATUSES.IN_BLOCKCHAIN,
                     height: tx.height as number
                 })))
-            .catch(() => ({ ...DEFAULT_STATUS, id }))
+            .catch(() => ({...DEFAULT_STATUS, id}))
     );
 
     return Promise.all([
         fetchHeight(base),
         Promise.all(loadAllTxInfo)
-    ]).then(([{ height }, statuses]) => ({
+    ]).then(([{height}, statuses]) => ({
         height,
         statuses: statuses.map(item => ({
             ...item,
@@ -155,7 +150,7 @@ export interface ITransactionStatus {
     height: number;
 }
 
-export function broadcast(base: string, tx: TTransaction<TLong> & IWithProofs): Promise<TTransaction<TLong> & IWithApiMixin> {
+export function broadcast<T extends TSignedTransaction<TTransaction<TLong>>>(base: string, tx: T): Promise<T & IWithApiMixin> {
     return request({
         base, url: '/transactions/broadcast',
         options: {

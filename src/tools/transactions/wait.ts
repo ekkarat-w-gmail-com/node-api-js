@@ -2,13 +2,13 @@ import { TLong } from '../../interface';
 import { head, indexBy, prop, toArray, wait } from '../utils';
 import { fetchStatus } from '../../api-node/transactions';
 import { TRANSACTION_STATUSES } from '../../constants';
-import { IWithApiMixin, TTransaction } from '@waves/ts-types';
+import { IWithApiMixin, TSignedTransaction, TTransaction } from '@waves/ts-types';
 
 
-export default function <T extends TTransaction<TLong> & IWithApiMixin>(base: string, tx: T, options?: IWaitOptions): Promise<T>;
-export default function <T extends TTransaction<TLong> & IWithApiMixin>(base: string, list: Array<T>, options?: IWaitOptions): Promise<Array<T>>;
-export default function <T extends TTransaction<TLong> & IWithApiMixin>(base: string, tx: T | Array<T>, options?: IWaitOptions): Promise<T | Array<T>>;
-export default function <T extends TTransaction<TLong> & IWithApiMixin>(base: string, tx: T | Array<T>, options?: IWaitOptions): Promise<T | Array<T>> {
+export default function <T extends TSignedTransaction<TTransaction<TLong>> & IWithApiMixin>(base: string, tx: T, options?: IWaitOptions): Promise<T>;
+export default function <T extends TSignedTransaction<TTransaction<TLong>> & IWithApiMixin>(base: string, list: Array<T>, options?: IWaitOptions): Promise<Array<T>>;
+export default function <T extends TSignedTransaction<TTransaction<TLong>> & IWithApiMixin>(base: string, tx: T | Array<T>, options?: IWaitOptions): Promise<T | Array<T>>;
+export default function <T extends TSignedTransaction<TTransaction<TLong>> & IWithApiMixin>(base: string, tx: T | Array<T>, options?: IWaitOptions): Promise<T | Array<T>> {
     const isOnce = !Array.isArray(tx);
     const start = Date.now();
     const confirmed: Array<T> = [];

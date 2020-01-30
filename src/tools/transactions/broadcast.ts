@@ -18,14 +18,13 @@ export type TMapTuple<T extends Array<Record<string | number, any>>, TO_MAP exte
 }
 type TWithApiMixinList<T extends Array<TTransaction<TLong>>> = { [Key in keyof T]: T[Key] extends TTransaction<TLong> ? TSignedTransaction<T[Key]> & IWithApiMixin : never }
 
-type TSigned<LONG, T extends Array<TTransaction<LONG>>> = { [Key in keyof T]: T[Key] extends TTransaction<LONG> ? TSignedTransaction<T[Key]> : never }
-
+export type TSigned<LONG, T extends Array<TTransaction<LONG>>> = { [Key in keyof T]: T[Key] extends TTransaction<LONG> ? TSignedTransaction<T[Key]> : never }
 
 export default function <T extends Array<TTransaction<TLong>>>(base: string, list: TSigned<TLong, T>): Promise<TWithApiMixinList<T>>;
 export default function <T extends TTransaction<TLong>>(base: string, tx: TSignedTransaction<T>, options?: Partial<IOptions>): Promise<T & IWithApiMixin>;
 export default function (
     base: string,
-    list: TSignedTransaction<TTransaction<TLong>> | Array<TSignedTransaction<TTransaction<TLong>>>,
+    list: TSignedTransaction<TTransaction<TLong>> | Array<TSignedTransaction<TTransaction<TLong>>> | any,
     options?: Partial<IOptions>
 ): Promise<TTransaction<TLong> & IWithApiMixin | Array<TTransaction<TLong> & IWithApiMixin>> {
     const opt = {...DEFAULT_BROADCAST_OPTIONS, ...(options || {})};
@@ -44,24 +43,24 @@ function simpleBroadcast<T extends Array<TSignedTransaction<TTransaction<TLong>>
     return Promise.all(list.map(tx => broadcast(base, tx))) as Promise<TWithApiMixinList<T>>;
 }
 
-function chainBroadcast<T extends Array<TSignedTransaction<TTransaction<TLong>>>>(base: string, list: T, options: IOptions): Promise<TWithApiMixinList<T>> {
-    return new Promise<TWithApiMixinList<T>>((resolve, reject) => {
-        const toBroadcast = list.slice().reverse();
-        const result: TWithApiMixinList<T> = [] as unknown as TWithApiMixinList<T>;
+function chainBroadcast<T extends TSignedTransaction<TTransaction<TLong>>>(base: string, list: Array<T>, options: IOptions): Promise<Array<T & IWithApiMixin>> {
+    return new Promise<Array<T & IWithApiMixin>>((resolve, reject) => {
+        const toBroadcast: Array<TSignedTransaction<TTransaction<TLong>>> = list.slice().reverse();
+        const result: Array<T & IWithApiMixin> = [];
 
         const loop = () => {
-            if (!toBroadcast.length) {
+            const tx = toBroadcast.pop();
+            if (tx == null) {
                 resolve(result);
                 return null;
+            } else {
+                broadcast(base, tx)
+                    .then(tx => wait(base, tx, options))
+                    .then((tx: TSignedTransaction<TTransaction> & IWithApiMixin) => {
+                        result.push(tx as T & IWithApiMixin);
+                        loop();
+                    }, reject);
             }
-
-            const tx = toBroadcast.pop() as TSignedTransaction<TTransaction<TLong>>;
-            broadcast(base, tx)
-                .then(tx => wait(base, tx, options))
-                .then(tx => {
-                    result.push(tx);
-                    loop();
-                }, reject);
         };
 
         loop();
