@@ -1,8 +1,8 @@
 import create from '../../../src/tools/adresses/watch';
 import { CHAIN_ID, NODE_URL, STATE } from '../../_state';
 import { broadcast, libs, transfer, waitForTx } from '@waves/waves-transactions';
-import { TTransactionFromAPI, TTransactionWithId } from '@waves/ts-types';
 import { TLong } from '../../../src/interface';
+import { IWithApiMixin, IWithId, TSignedTransaction, TTransaction } from '@waves/ts-types';
 
 
 let watcher: ReturnType<typeof create> extends Promise<infer T> ? T : never = null as any;
@@ -86,12 +86,12 @@ it('Catch once transaction', async () => {
 });
 
 test('Catch 30 transactions', async () => {
-    const result: Array<TTransactionFromAPI<TLong>> = [];
-    const toSend: Array<TTransactionWithId<TLong>> = [];
+    const result: Array<TSignedTransaction<TTransaction<TLong>> & IWithApiMixin> = [];
+    const toSend: Array<TTransaction<TLong> & IWithId> = [];
     let count = 0;
 
     watcher.on('change-state', list => {
-        result.push(...list);
+        result.push(...list as any);
     });
 
     const add = async () => {

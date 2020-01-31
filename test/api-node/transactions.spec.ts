@@ -1,7 +1,7 @@
 import { CHAIN_ID, MASTER_ACCOUNT, NODE_URL, STATE } from '../_state';
 import { libs, transfer } from '@waves/waves-transactions';
 import create from '../../src';
-import { ITransferTransactionWithProofs, IWithId } from '@waves/ts-types';
+import { IWithId, TSignedTransaction, TTransferTransaction } from '@waves/ts-types';
 import { TLong } from '../../src/interface';
 import { TRANSACTION_STATUSES } from '../../src/constants';
 import { fetchCalculateFee } from '../../src/api-node/transactions';
@@ -14,7 +14,7 @@ it('Broadcast and unconfirmed', async () => {
         transfer({
             recipient: libs.crypto.address(libs.crypto.randomSeed(), CHAIN_ID),
             amount: 1
-        }, MASTER_ACCOUNT.SEED) as ITransferTransactionWithProofs<TLong>
+        }, MASTER_ACCOUNT.SEED) as TSignedTransaction<TTransferTransaction<TLong>>
     );
 
     const unconfirmed = await API.transactions.fetchUnconfirmedInfo(tx.id);
@@ -26,7 +26,7 @@ test('Broadcast, wait and info', async () => {
         transfer({
             recipient: libs.crypto.address(libs.crypto.randomSeed(), CHAIN_ID),
             amount: 1
-        }, MASTER_ACCOUNT.SEED) as ITransferTransactionWithProofs<TLong>
+        }, MASTER_ACCOUNT.SEED) as TSignedTransaction<TTransferTransaction<TLong>>
     );
 
     await API.tools.transactions.wait(tx, { confirmations: 0 });
@@ -42,7 +42,7 @@ describe('Status', () => {
             transfer({
                 recipient: libs.crypto.address(libs.crypto.randomSeed(), CHAIN_ID),
                 amount: 1
-            }, MASTER_ACCOUNT.SEED) as ITransferTransactionWithProofs<TLong>
+            }, MASTER_ACCOUNT.SEED) as TSignedTransaction<TTransferTransaction<TLong>>
         );
 
 
@@ -56,7 +56,7 @@ describe('Status', () => {
         const tx = transfer({
             recipient: libs.crypto.address(libs.crypto.randomSeed(), CHAIN_ID),
             amount: 1
-        }, MASTER_ACCOUNT.SEED) as ITransferTransactionWithProofs<TLong> & IWithId;
+        }, MASTER_ACCOUNT.SEED) as TSignedTransaction<TTransferTransaction<TLong>> & IWithId;
 
         const status = await API.transactions.fetchStatus([tx.id]);
 
